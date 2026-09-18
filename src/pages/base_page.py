@@ -26,7 +26,12 @@ class BasePage:
         return self.wait.until(conditions.visibility_of_element_located(locator))
 
     def click(self, locator: Locator) -> None:
-        self.wait.until(conditions.element_to_be_clickable(locator)).click()
+        element = self.wait.until(conditions.element_to_be_clickable(locator))
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});",
+            element,
+        )
+        element.click()
 
     def fill(self, locator: Locator, value: str) -> None:
         element = self.find_visible(locator)
