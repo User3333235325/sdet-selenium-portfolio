@@ -1,19 +1,18 @@
-"""Form-submission coverage using a dedicated public practice page."""
+"""Form-submission coverage against a form the test run controls."""
 
 import pytest
 from selenium.webdriver.remote.webdriver import WebDriver
 
-from src.config.settings import settings
 from src.pages.html_form_page import HtmlFormPage, HtmlFormResultsPage
 
 
 @pytest.mark.smoke
 @pytest.mark.regression
-def test_user_can_submit_a_completed_html_form(driver: WebDriver) -> None:
+def test_user_can_submit_a_completed_html_form(driver: WebDriver, form_url: str) -> None:
     username = "portfolio-tester"
     comment = "Automated form submission"
     form_page = HtmlFormPage(driver)
-    form_page.load(settings.form_test_url)
+    form_page.load(form_url)
 
     form_page.submit(
         username=username,

@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Iterator
 
 import pytest
 from selenium import webdriver
@@ -13,6 +14,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from src.config.settings import settings
+from tests.support.form_server import serve_form
 
 ARTIFACTS_DIRECTORY = Path("artifacts")
 
@@ -68,7 +70,7 @@ def _block_third_party_requests(driver: WebDriver) -> None:
 
 
 @pytest.fixture
-def driver(request: pytest.FixtureRequest) -> WebDriver:
+def driver(request: pytest.FixtureRequest) -> Iterator[WebDriver]:
     """Provide an isolated browser and save evidence whenever a test fails."""
     browser = _build_chrome_driver()
     yield browser
@@ -77,6 +79,21 @@ def driver(request: pytest.FixtureRequest) -> WebDriver:
     if report and report.failed:
         _save_failure_artifacts(browser, request.node.name)
     browser.quit()
+
+
+@pytest.fixture(scope="session")
+def form_url() -> Iterator[str]:
+    """Base URL of the HTML form under test.
+
+    Defaults to a local server, so the run does not depend on a third-party page
+    staying available or staying still. Set FORM_TEST_URL to point the same test
+    at a hosted page instead.
+    """
+    if settings.form_test_url:
+        yield settings.form_test_url
+        return
+    with serve_form() as base_url:
+        yield base_url
 
 
 @pytest.hookimpl(hookwrapper=True)
