@@ -91,9 +91,11 @@ class BasePage:
             return False
         return True
 
-    def wait_for_url_to_contain(self, value: str) -> None:
-        self.wait.until(
+    def wait_for_url_to_contain(self, value: str, timeout: Optional[int] = None) -> None:
+        wait = self.wait if timeout is None else WebDriverWait(self.driver, timeout)
+        effective_timeout = self.timeout if timeout is None else timeout
+        wait.until(
             conditions.url_contains(value),
-            f"URL never contained {value!r} within {self.timeout}s "
+            f"URL never contained {value!r} within {effective_timeout}s "
             f"(current: {self.driver.current_url})",
         )
