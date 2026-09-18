@@ -8,12 +8,30 @@ from pathlib import Path
 
 import pytest
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from src.config.settings import settings
 
 ARTIFACTS_DIRECTORY = Path("artifacts")
+
+# Ad and analytics frames are the usual cause of ElementClickInterceptedException
+# on public practice sites: they load late, push the form down after the test has
+# already scrolled, and sometimes float a sticky banner over the submit button.
+# Blocking them is a test-environment decision, not a workaround in the test code.
+BLOCKED_THIRD_PARTY_URLS = [
+    "*googlesyndication.com*",
+    "*doubleclick.net*",
+    "*googletagservices.com*",
+    "*googletagmanager.com*",
+    "*google-analytics.com*",
+    "*adservice.google.*",
+    "*adsystem.com*",
+    "*carbonads.net*",
+    "*ezoic.net*",
+    "*ezodn.com*",
+]
 
 
 def _build_chrome_driver() -> WebDriver:
@@ -25,14 +43,28 @@ def _build_chrome_driver() -> WebDriver:
     options = Options()
     if settings.headless:
         options.add_argument("--headless=new")
-    options.add_argument("--window-size=1440,1000")
+    # A taller viewport keeps long forms in view and reduces scroll-then-click races.
+    options.add_argument("--window-size=1440,1400")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--no-sandbox")
 
     driver = webdriver.Chrome(options=options)
     driver.set_page_load_timeout(settings.timeout_seconds)
     driver.implicitly_wait(0)
+    _block_third_party_requests(driver)
     return driver
+
+
+def _block_third_party_requests(driver: WebDriver) -> None:
+    """Drop ad and tracker requests so page layout stays stable during a run."""
+    try:
+        driver.execute_cdp_cmd("Network.enable", {})
+        driver.execute_cdp_cmd(
+            "Network.setBlockedURLs", {"urls": BLOCKED_THIRD_PARTY_URLS}
+        )
+    except (WebDriverException, AttributeError):
+        # Non-Chromium drivers have no CDP; the suite still runs without blocking.
+        pass
 
 
 @pytest.fixture
