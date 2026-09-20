@@ -43,6 +43,9 @@ def _build_chrome_driver() -> WebDriver:
         )
 
     options = Options()
+    options.add_experimental_option(
+        "prefs", {"profile.password_manager_leak_detection": False}
+    )
     if settings.headless:
         options.add_argument("--headless=new")
     # A taller viewport keeps long forms in view and reduces scroll-then-click races.

@@ -8,7 +8,7 @@ The tests cover login, shopping cart actions, and form submission.
 
 - [The Internet](https://the-internet.herokuapp.com/) — valid and invalid login.
 - [Sauce Demo](https://www.saucedemo.com/) — login and add a product to the cart.
-- [EvilTester Test Pages](https://testpages.eviltester.com/pages/forms/html-form/) — complete and submit an HTML form.
+- Local HTML form — complete and submit a form. Pytest starts and stops the local server.
 
 `standard_user` and `secret_sauce` are public Sauce Demo credentials. They are not real account details.
 
@@ -39,7 +39,8 @@ The tests cover login, shopping cart actions, and form submission.
 │   ├── conftest.py               # Browser setup and failure files
 │   ├── test_the_internet_login.py
 │   ├── test_sauce_demo_shopping.py
-│   └── test_html_form_submission.py
+│   ├── test_html_form_submission.py
+│   └── support/form_server.py    # Local HTML form
 ├── .github/workflows/ui-tests.yml
 ├── requirements.txt
 └── pytest.ini
@@ -90,7 +91,7 @@ The project has defaults for all test sites.
 | `BROWSER` | `chrome` | Browser to run. |
 | `THE_INTERNET_URL` | `https://the-internet.herokuapp.com` | The Internet URL. |
 | `SAUCE_DEMO_URL` | `https://www.saucedemo.com` | Sauce Demo URL. |
-| `FORM_TEST_URL` | `https://testpages.eviltester.com/pages/forms/html-form/` | HTML form test URL. |
+| `FORM_TEST_URL` | Empty (local form) | Set a URL to use a compatible hosted form. |
 
 Example:
 

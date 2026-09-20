@@ -1,4 +1,4 @@
-"""Page objects for the EvilTester HTML form practice page."""
+"""Page objects for the HTML form and its submission results."""
 
 from selenium.webdriver.common.by import By
 
