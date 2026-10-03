@@ -92,6 +92,7 @@ The project has defaults for all test sites.
 | `THE_INTERNET_URL` | `https://the-internet.herokuapp.com` | The Internet URL. |
 | `SAUCE_DEMO_URL` | `https://www.saucedemo.com` | Sauce Demo URL. |
 | `FORM_TEST_URL` | Empty (local form) | Set a URL to use a compatible hosted form. |
+| `PAGE_LOAD_TIMEOUT_SECONDS` | `30` | Max time for a page navigation. Covers a slow dyno wake-up. |
 
 Example:
 

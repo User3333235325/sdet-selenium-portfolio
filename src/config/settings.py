@@ -24,6 +24,11 @@ class Settings:
     # Set FORM_TEST_URL to aim the same test at a hosted page.
     form_test_url: str = os.getenv("FORM_TEST_URL", "")
     timeout_seconds: int = int(os.getenv("UI_TIMEOUT_SECONDS", "10"))
+    # Separate from timeout_seconds on purpose: the-internet.herokuapp.com runs on
+    # a free-tier dyno that sleeps when idle, and the request that wakes it can
+    # take well past 10s. This covers that cold start without slowing down every
+    # explicit element wait in the suite.
+    page_load_timeout_seconds: int = int(os.getenv("PAGE_LOAD_TIMEOUT_SECONDS", "30"))
 
 
 settings = Settings()

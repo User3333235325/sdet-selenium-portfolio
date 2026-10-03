@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator
@@ -54,7 +56,7 @@ def _build_chrome_driver() -> WebDriver:
     options.add_argument("--no-sandbox")
 
     driver = webdriver.Chrome(options=options)
-    driver.set_page_load_timeout(settings.timeout_seconds)
+    driver.set_page_load_timeout(settings.page_load_timeout_seconds)
     driver.implicitly_wait(0)
     _block_third_party_requests(driver)
     return driver
@@ -72,6 +74,20 @@ def _block_third_party_requests(driver: WebDriver) -> None:
         pass
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _warm_up_the_internet() -> None:
+    """Wake the-internet's free-tier dyno before any test times its own navigation.
+
+    A plain HTTP request is not bound by Selenium's page load timeout, so this
+    absorbs a slow cold start here, once, instead of inside a test.
+    """
+    try:
+        urllib.request.urlopen(settings.the_internet_url, timeout=45)
+    except (urllib.error.URLError, OSError):
+        # If even this times out, page_load_timeout_seconds is the backstop.
+        pass
+
+
 @pytest.fixture
 def driver(request: pytest.FixtureRequest) -> Iterator[WebDriver]:
     """Provide an isolated browser and save evidence whenever a test fails."""
@@ -80,7 +96,14 @@ def driver(request: pytest.FixtureRequest) -> Iterator[WebDriver]:
 
     report = getattr(request.node, "rep_call", None)
     if report and report.failed:
-        _save_failure_artifacts(browser, request.node.name)
+        try:
+            _save_failure_artifacts(browser, request.node.name)
+        except WebDriverException:
+            # The browser can be too unresponsive to screenshot - e.g. a page
+            # load timeout left it mid-navigation. The test failure is already
+            # recorded; losing the screenshot on top of it must not also mask
+            # that failure or skip the quit() below.
+            pass
     browser.quit()
 
 
