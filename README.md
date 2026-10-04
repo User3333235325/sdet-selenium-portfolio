@@ -6,7 +6,7 @@ The tests cover login, shopping cart actions, and form submission.
 
 ## Test sites
 
-- [The Internet](https://the-internet.herokuapp.com/) — valid and invalid login.
+- Local login flow (modeled on [The Internet](https://the-internet.herokuapp.com/)) — valid and invalid login. Pytest starts and stops the local server.
 - [Sauce Demo](https://www.saucedemo.com/) — login and add a product to the cart.
 - Local HTML form — complete and submit a form. Pytest starts and stops the local server.
 
@@ -40,7 +40,9 @@ The tests cover login, shopping cart actions, and form submission.
 │   ├── test_the_internet_login.py
 │   ├── test_sauce_demo_shopping.py
 │   ├── test_html_form_submission.py
-│   └── support/form_server.py    # Local HTML form
+│   └── support/
+│       ├── form_server.py            # Local HTML form
+│       └── the_internet_server.py    # Local login flow
 ├── .github/workflows/ui-tests.yml
 ├── requirements.txt
 └── pytest.ini
@@ -89,7 +91,7 @@ The project has defaults for all test sites.
 | --- | --- | --- |
 | `HEADLESS` | `true` | Set to `false` to see the browser. |
 | `BROWSER` | `chrome` | Browser to run. |
-| `THE_INTERNET_URL` | `https://the-internet.herokuapp.com` | The Internet URL. |
+| `THE_INTERNET_URL` | Empty (local stand-in) | Set a URL to use a compatible hosted site. |
 | `SAUCE_DEMO_URL` | `https://www.saucedemo.com` | Sauce Demo URL. |
 | `FORM_TEST_URL` | Empty (local form) | Set a URL to use a compatible hosted form. |
 | `PAGE_LOAD_TIMEOUT_SECONDS` | `30` | Max time for a page navigation. Covers a slow dyno wake-up. |
@@ -105,8 +107,8 @@ pytest -m smoke
 
 | Area | Test | Check |
 | --- | --- | --- |
-| Login | Valid The Internet login | The secure area and success message appear. |
-| Login | Invalid The Internet login | An error message appears. |
+| Login | Valid login | The secure area and success message appear. |
+| Login | Invalid login | An error message appears. |
 | Shopping cart | Sauce Demo add to cart | The selected product appears in the cart. |
 | Form | HTML form submission | The submitted values and success message appear. |
 

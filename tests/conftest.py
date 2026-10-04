@@ -17,6 +17,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 
 from src.config.settings import settings
 from tests.support.form_server import serve_form
+from tests.support.the_internet_server import serve_the_internet
 
 ARTIFACTS_DIRECTORY = Path("artifacts")
 
@@ -76,11 +77,15 @@ def _block_third_party_requests(driver: WebDriver) -> None:
 
 @pytest.fixture(scope="session", autouse=True)
 def _warm_up_the_internet() -> None:
-    """Wake the-internet's free-tier dyno before any test times its own navigation.
+    """Wake the-internet's dyno before any test times its own navigation.
 
-    A plain HTTP request is not bound by Selenium's page load timeout, so this
-    absorbs a slow cold start here, once, instead of inside a test.
+    Only relevant when THE_INTERNET_URL opts back into the real hosted site -
+    the default local stand-in has no cold start to wait out. A plain HTTP
+    request is not bound by Selenium's page load timeout, so this absorbs a
+    slow wake-up here, once, instead of inside a test.
     """
+    if not settings.the_internet_url:
+        return
     try:
         urllib.request.urlopen(settings.the_internet_url, timeout=45)
     except (urllib.error.URLError, OSError):
@@ -119,6 +124,21 @@ def form_url() -> Iterator[str]:
         yield settings.form_test_url
         return
     with serve_form() as base_url:
+        yield base_url
+
+
+@pytest.fixture(scope="session")
+def the_internet_url() -> Iterator[str]:
+    """Base URL of the-internet's login flow.
+
+    Defaults to a local stand-in, so the run does not depend on that
+    community-hosted site staying up. Set THE_INTERNET_URL to point the same
+    tests at the real hosted site instead.
+    """
+    if settings.the_internet_url:
+        yield settings.the_internet_url
+        return
+    with serve_the_internet() as base_url:
         yield base_url
 
 
